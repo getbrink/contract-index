@@ -19,6 +19,29 @@ import sys
 import urllib.request
 from dataclasses import dataclass
 from pathlib import Path
+from urllib.parse import urlparse
+
+
+class _AuthStrippingRedirectHandler(urllib.request.HTTPRedirectHandler):
+    """Strip Authorization header on cross-host redirects.
+
+    GitHub release-asset downloads return 302 → S3 with credentials
+    embedded in the signed URL. Forwarding our GitHub PAT to S3 makes
+    S3 return 404 (it parses the bad auth as a malformed request).
+    """
+
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        new_req = super().redirect_request(req, fp, code, msg, headers, newurl)
+        if new_req is None:
+            return None
+        if urlparse(newurl).hostname != urlparse(req.full_url).hostname:
+            for h in ("Authorization", "authorization"):
+                if h in new_req.headers:
+                    del new_req.headers[h]
+        return new_req
+
+
+_OPENER = urllib.request.build_opener(_AuthStrippingRedirectHandler())
 
 REPO = "getbrink/brink"
 TAG_PREFIX = "contract-v"
@@ -49,21 +72,27 @@ def github_api(path: str, token: str) -> bytes:
             "User-Agent": "brink-contract-index/1.0",
         },
     )
-    with urllib.request.urlopen(req, timeout=30) as resp:
+    with _OPENER.open(req, timeout=30) as resp:
         return resp.read()
 
 
-def fetch_text(url: str, token: str) -> str:
+def fetch_asset(asset_api_url: str, token: str) -> bytes:
+    """Download a release-asset via its API URL.
+
+    Uses Accept: application/octet-stream so GitHub returns the file
+    bytes (302 → S3). The _AuthStrippingRedirectHandler ensures the
+    GitHub PAT is not forwarded to S3.
+    """
     req = urllib.request.Request(
-        url,
+        asset_api_url,
         headers={
             "Authorization": f"token {token}",
             "Accept": "application/octet-stream",
             "User-Agent": "brink-contract-index/1.0",
         },
     )
-    with urllib.request.urlopen(req, timeout=30) as resp:
-        return resp.read().decode("utf-8")
+    with _OPENER.open(req, timeout=60) as resp:
+        return resp.read()
 
 
 def list_releases(token: str) -> list[dict]:
@@ -91,20 +120,28 @@ def extract_artifacts(release: dict, token: str) -> list[Artifact]:
     sha_map: dict[str, str] = {}
     for asset in release.get("assets", []):
         if asset["name"] == "SHA256SUMS":
-            try:
-                sha_map = parse_sha256sums(fetch_text(asset["browser_download_url"], token))
-            except Exception as e:  # noqa: BLE001
-                print(f"  warn: failed to fetch SHA256SUMS for {release['tag_name']}: {e}", file=sys.stderr)
+            sha_text = fetch_asset(asset["url"], token).decode("utf-8")
+            sha_map = parse_sha256sums(sha_text)
             break
+    if not sha_map:
+        raise RuntimeError(
+            f"release {release['tag_name']} has no SHA256SUMS asset; "
+            "cannot emit PEP 503 #sha256= anchors without integrity check"
+        )
 
     out: list[Artifact] = []
     for asset in release.get("assets", []):
         name = asset["name"]
         if WHEEL_RE.match(name) or SDIST_RE.match(name):
+            if name not in sha_map:
+                raise RuntimeError(
+                    f"release {release['tag_name']} asset {name} "
+                    "has no SHA256SUMS entry"
+                )
             out.append(Artifact(
                 filename=name,
                 url=asset["browser_download_url"],
-                sha256=sha_map.get(name),
+                sha256=sha_map[name],
             ))
     return out
 
