@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Brink contract package index</title>
+    <style>
+        body { font-family: -apple-system, system-ui, sans-serif; max-width: 720px; margin: 2em auto; padding: 0 1em; color: #222; line-height: 1.5; }
+        code { background: #f4f4f4; padding: 0.1em 0.3em; border-radius: 3px; font-size: 0.95em; }
+        pre  { background: #f4f4f4; padding: 1em; border-radius: 6px; overflow-x: auto; }
+        h1   { border-bottom: 1px solid #ccc; padding-bottom: 0.3em; }
+        a    { color: #0a66c2; }
+    </style>
+</head>
+<body>
+    <h1>Brink contract Python package index</h1>
+    <p>
+        This is the PEP 503 simple-index for the
+        <a href="https://github.com/getbrink/brink/tree/main/pkg/contract/python"><code>brink-contract</code></a>
+        Python package. The index itself is publicly readable. The wheels it points at live as
+        release assets on the private <code>getbrink/brink</code> repo and require a GitHub PAT to download.
+    </p>
+
+    <h2>Index URL</h2>
+    <p><a href="simple/"><code>https://getbrink.github.io/contract-index/simple/</code></a></p>
+
+    <h2>Install</h2>
+    <p>Configure <code>~/.netrc</code> with a GitHub PAT scoped to <code>getbrink/brink</code> <code>Contents: Read</code>:</p>
+    <pre>machine github.com
+  login x-token
+  password $BRINK_PYPI_TOKEN</pre>
+    <p>Then:</p>
+    <pre>pip install \
+    --index-url https://getbrink.github.io/contract-index/simple/ \
+    --extra-index-url https://pypi.org/simple/ \
+    brink-contract</pre>
+
+    <h2>For uv-native projects</h2>
+    <pre>[project]
+dependencies = ["brink-contract&gt;=0.1.2,&lt;0.2.0"]
+
+[[tool.uv.index]]
+name = "getbrink"
+url = "https://getbrink.github.io/contract-index/simple/"
+explicit = true
+
+[tool.uv.sources]
+brink-contract = { index = "getbrink" }</pre>
+
+    <h2>More</h2>
+    <p>See the <a href="https://github.com/getbrink/contract-index">contract-index repo README</a> for token rotation, GHE compatibility, and the post-PyPI-flip plan.</p>
+</body>
+</html>
