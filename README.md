@@ -1,4 +1,18 @@
-# contract-index
+# contract-index — ARCHIVED 2026-05-25
+
+**This repo is archived.** It hosted the v1 GitHub-Pages-based PEP 503
+simple-index for `brink-contract`. The architecture proved non-viable
+(pip cannot download from `browser_download_url` for private repos
+regardless of auth; API-URL alternative requires Accept-negotiation
+that pip does not perform). See the [v2 plan](https://github.com/getbrink/brink/blob/main/HQ/Brink/Primitives/implementation/mvp+/reference/Brink-Contract%20Publish%20Pipeline.md) §13.0 for the post-mortem.
+
+Brink moved to AWS CodeArtifact + GitHub Actions OIDC. The new endpoint
+is private; `brink-contract` is no longer served by this repo. Consumer
+pyprojects point at `brink-<acct>.d.codeartifact.<region>.amazonaws.com`.
+
+---
+
+## Original purpose (historical)
 
 PEP 503 simple-index for the [brink-contract](https://github.com/getbrink/brink/tree/main/pkg/contract/python) Python package.
 
