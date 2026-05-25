@@ -37,7 +37,7 @@ jobs:
         run: |
           git config user.name 'contract-index-bot'
           git config user.email 'contract-index-bot@users.noreply.github.com'
-          git add pages/
+          git add docs/
           if git diff --staged --quiet; then
             echo 'No index changes; nothing to commit.'
             exit 0

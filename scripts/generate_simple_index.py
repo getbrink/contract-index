@@ -2,8 +2,8 @@
 
 Walks getbrink/brink releases filtered by the `contract-v*` tag prefix,
 extracts wheel + sdist asset URLs and their SHA256 digests, and writes a
-PEP 503-compliant simple-index to pages/simple/brink-contract/index.html
-(and a root listing to pages/simple/index.html).
+PEP 503-compliant simple-index to docs/simple/brink-contract/index.html
+(and a root listing to docs/simple/index.html).
 
 Auth: requires GITHUB_TOKEN env var with `Contents: Read` scope on getbrink/brink.
 
@@ -24,7 +24,7 @@ REPO = "getbrink/brink"
 TAG_PREFIX = "contract-v"
 PACKAGE_NAME = "brink-contract"
 NORMALIZED_NAME = "brink-contract"  # PEP 503 normalization: already lowercase, hyphens
-OUT_ROOT = Path(__file__).resolve().parents[1] / "pages" / "simple"
+OUT_ROOT = Path(__file__).resolve().parents[1] / "docs" / "simple"
 
 # Match wheel (PEP 427) and sdist filenames. brink-contract releases produce
 # brink_contract-<version>-py3-none-any.whl and brink_contract-<version>.tar.gz.
